@@ -33,19 +33,24 @@ const getIngredient = async (req: Request, res: Response): Promise<Response> => 
 
 const modifyIngredient = async (req: Request, res: Response): Promise<Response> => {
   const { id } = req.params
+  const owner = req.body.owner.id
+  const data = {
+    ...req.body,
+    ownedBy: owner
+  }
   const ingredient = await Ingredient.findById(id)
   if (ingredient == null) {
     return res.status(404).json({ error: 'Ingredient not found.' })
   }
-  const isValid = ingredient.validateSync()
+  const isValid = new Ingredient(data).validateSync()
   if (isValid != null) {
     return res.status(400).json({ error: 'Invalid ingredient.', msg: isValid })
   }
-  const updateIngredient = await Ingredient.findById(id).updateOne(req.body)
+  const updateIngredient = await Ingredient.findByIdAndUpdate(id, data, { new: true })
   if (updateIngredient == null) {
     return res.status(500).json({ error: 'Error updating ingredient.' })
   }
-  return res.status(200).json({ ingredient })
+  return res.status(200).json(await Ingredient.findById(id))
 }
 
 const deleteIngredient = async (req: Request, res: Response): Promise<Response> => {
@@ -62,4 +67,9 @@ const deleteIngredient = async (req: Request, res: Response): Promise<Response> 
   return res.status(200).json({ ingredient })
 }
 
-export { createIngredient, getIngredient, modifyIngredient, deleteIngredient }
+const getAllIngredients = async (req: Request, res: Response): Promise<Response> => {
+  const ingredients = await Ingredient.find()
+  return res.status(200).json({ ingredients })
+}
+
+export { createIngredient, getIngredient, modifyIngredient, deleteIngredient, getAllIngredients}
