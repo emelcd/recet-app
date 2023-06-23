@@ -16,13 +16,14 @@ const createDish = async (req: Request, res: Response): Promise<Response> => {
     return res.status(500).json({ error: 'Error creating ingredient.' })
   }
   const computedDish = await savedDish.populate('ingredients.ingredient')
-  // @ts-ignore
-  const totalKcal = computedDish.ingredients.reduce((acc, curr) => {
+  let totalKcal = 0
+  computedDish.ingredients.forEach((i) => {
     // @ts-ignore
-    acc += curr.qty * curr.ingredient.calories
-  }, 0)
+    totalKcal += i.ingredient.calories * i.qty
+  })
+  computedDish.totalKcal = totalKcal
 
-  return res.status(201).json({ dish: computedDish, totalKcal })
+  return res.status(201).json({ dish: computedDish })
 }
 
 const getDish = async (req: Request, res: Response): Promise<Response> => {
